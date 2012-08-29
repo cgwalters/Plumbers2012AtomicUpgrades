@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pulling the plug on dpkg and rpm</title>
+
+    <meta charset='utf-8'>
+    <script src="slides.js"></script>
+  </head>
+    <body style='display: none'>
+
+    <section class='slides layout-regular template-default'>
+      
+<article>
+  <h1>Pulling the plug on dpkg and rpm</h1>
+</article>
+
+<article>
+<h3 id="why-are-we-here"></h3>
+
+<ul>
+  <li>Free Software is fun</li>
+  <li>A lot of people use our software, for work and play.</li>
+  <li>"our software": General purpose FOSS systems: Debian/Fedora/Gentoo etc.</li>
+</ul>
+</article>
+
+<article>
+<h3 id="but-we-have-embarassing-flaws">But we have embarassing flaws</h3>
+
+<ul>
+  <li>Upgrades can break your system, not atomic</li>
+  <li>Too easy to regress, and then no path to revert</li>
+  <li>Upgrading Firefox via dpkg/rpm breaks the running instance</li>
+</ul>
+</article>
+
+<article>
+<h3 id="increment-all-the-versions">Increment all the versions!</h3>
+
+<ul>
+  <li>RPM and dpkg both define "upgrade" to be increase in version number</li>
+  <li>Hacking around this (RPM epoch, Debian <b>~really</b>) are too painful and ugly</li>
+  <li>I believe this semantic deeply influcences our culture; kernel
+      often reverts commits, rare to see discussed in "distributions"</li>
+  <li>Oh also, if it breaks, you're screwed.</li>
+</ul>
+</article>
+
+<article>
+<h3 id="ostree-for-development">OSTree: "git for operating system binaries"</h3>
+<ul>
+  <li>OSTree/VCS - userspace version control, and GRUB/initramfs management</li>
+  <li>OSTree/Ostbuild - take input set of git repositores, continually feeds multiple trees</li>
+  <li>Designed to deploy into /ostree; <b>does not affect your distribution</b></li>
+</ul>
+</article>
+
+<article>
+<h3 id="boot-info-chroot">Boot into chroots, with bind mounts outside</h3>
+<ul>
+  <li>Rather than operating system living in /, you boot into a chroot</li>
+  <li>Bind mounts set up:</li>
+  <li>/home -> /home</li>
+  <li>/var -> /ostree/var</li>
+  <li>/etc -> /ostree/deploy/trees/X-etc</li>
+</ul>
+</article>
+
+<article>
+<h3 id="ostree-ls">Demo</h3>
+<pre>
+$ ls -al /ostree/
+total 40
+drwxr-xr-x.  8 root root 4096 Aug 25 13:26 .
+dr-xr-xr-x. 25 root root 4096 Aug 26 17:36 ..
+lrwxrwxrwx.  1 root root  100 Aug 25 13:26 current -> deploy/trees/gnomeos-3.6-i686-devel-b49228c929cfa31a30d8f98191abfadced58b3836ea8a85989f877174e5e2b04
+drwxr-xr-x.  3 root root 4096 Aug 25 13:24 deploy
+drwxr-xr-x.  8 root root 4096 Jul  8 10:52 modules
+lrwxrwxrwx.  1 root root  100 Aug 24 16:05 previous -> deploy/trees/gnomeos-3.6-i686-devel-b49228c929cfa31a30d8f98191abfadced58b3836ea8a85989f877174e5e2b04
+drwxr-xr-x.  7 root root 4096 Aug 15 17:37 repo
+drwxr-xr-x.  7 root root 4096 Jun  7 18:20 var
+$ ls -al /ostree/deploy/trees/
+total 16
+drwxr-xr-x.  4 root root 4096 Aug 25 13:26 .
+drwxr-xr-x.  3 root root 4096 Aug 25 13:24 ..
+drwxr-sr-x. 18 root root 4096 Aug 25 13:24 gnomeos-3.6-i686-devel-b49228c929cfa31a30d8f98191abfadced58b3836ea8a85989f877174e5e2b04
+drwxr-xr-x. 45 root root 4096 Aug 25 13:26 gnomeos-3.6-i686-devel-b49228c929cfa31a30d8f98191abfadced58b3836ea8a85989f877174e5e2b04-etc
+</pre>
+</article>
+
+<article>
+<h3 id="bisecting-regressions">Bisecting operating system builds</h3>
+<ul>
+  <li>A git commit causes a regression; OSTree tracks set of git
+      repositories and revisions that go into each tree</li>
+  <li>You can bisect across operating system builds; "my sound broke in the last week"</li>
+  <li>I do actually expect users of Free Software to help participate
+      in bisection.</li>
+</ul>
+</article>
+
+<article>
+<h3 id="upgrade-downloading">Downloading new revisions</h3>
+<pre>
+# cd /ostree
+# ostree-pull --repo=repo gnome --depth=3
+Fetching http://ostree.gnome.org/repo/refs/heads/trees/gnomeos-3.6-i686-runtime
+Fetching http://ostree.gnome.org/repo/refs/heads/trees/gnomeos-3.6-i686-devel
+Fetching http://ostree.gnome.org/repo/objects/55/48dbac3ed5ece0fee08936ae238bdd8c0e67d05df8d825ffc26e0861e0569b.commit
+Fetching http://ostree.gnome.org/repo/objects/9f/26d6902cadd26a91d6970243e061e65a001c07d15be6c6bf9b46c670fd2ec1.dirtree
+...
+162 content objects to fetch
+...
+remote gnome/trees/gnomeos-3.6-i686-runtime is now 5548dbac3ed5ece0fee08936ae238bdd8c0e67d05df8d825ffc26e0861e0569b
+remote gnome/trees/gnomeos-3.6-i686-devel is now aa07f4674d47e0e89c034a91433a95d333fe2d2d28adddcb4b2ea5731e97152e
+# ostree --repo=repo diff trees/gnomeos-3.6-i686-devel
+M    /contents.json
+M    /usr/libexec/gdm-session-worker
+M    /usr/libexec/gdm-simple-slave
+M    /usr/share/locale/lt/LC_MESSAGES/gnome-panel-3.0.mo
+#
+</article>
+
+<article>
+<h3 id="upgrading-deploying">Upgrading - deploying a new revision<h3>
+<pre>
+# ls -al /ostree/trees/gnomeos-3.6-i686-devel
+ lrwxrwxrwx. 1 root root 87 Aug 29 16:50 /ostree/trees/gnomeos-3.6-i686-devel -> gnomeos-3.6-i686-devel-aa07f4674d47e0e89c034a91433a95d333fe2d2d28adddcb4b2ea5731e97152e
+# ostadmin deploy trees/gnomeos-3.6-i686-devel
+ostree-run-triggers: Starting: 0001ldconfig.trigger
+ostree-run-triggers: Completed 0001ldconfig.trigger in 4.83 seconds
+...
+ostree-run-triggers: Starting: 0080gtk+.trigger
+ostree-run-triggers: Completed 0080gtk+.trigger in 43.93 seconds
+ostree-checkout: Rev trees/gnomeos-3.6-i686-devel checked out as aa07f4674d47e0e89c034a91433a95d333fe2d2d28adddcb4b2ea5731e97152e
+Already have OSTree entry in grub config
+/ostree/current set to trees/gnomeos-3.6-i686-devel
+</pre>
+</article>
+
+<article>
+<h3 id="configuration-management">Configuration propagates forwards in time (git branch)</h3>
+<ul>
+  <li>Each tree has its own <tt>-etc</tt></tt>
+  <li>When deploying new tree:</li>
+  <li>Compute diff between current etc and current <b>default</b> etc</tt>
+  <li>Apply diff to <b>new</b> etc</tt>
+</ul>
+</article>
+
+<article>
+<h3 id="build-system">Build system</h3>
+<ul>
+  <li>OpenEmbedded/Poky used to build initial chroot with gcc/bash/libc (currently, cross built from RHEL6)</li>
+  <li><tt>gobject-introspection</tt> can't cross build, therefore <b>must</b> switch over to same-arch build</li>
+  <li>"ostbuild" pulls from git repositories, puts results into OSTree roots</li>
+  <li>Two roots: gnomeos-3.6-i686-runtime, gnomeos-3.6-i686-devel, but could be as many as desired</li>
+  <li>Entire system builds as non-root; see <a href="http://git.gnome.org/browse/linux-user-chroot/">linux-user-chroot</a></li>
+</ul>
+</article>
+
+<article>
+<h3 id="questions">Questions?</h3>
+</article>
+
+</body>
+</html>
