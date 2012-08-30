@@ -58,7 +58,7 @@
 <h3 id="ostree-for-development">OSTree: "git for operating system binaries"</h3>
 <ul>
   <li>Research project that has borne a lot of fruit</li>
-  <li>OSTree/VCS - userspace version control, and GRUB/initramfs management</li>
+  <li>OSTree/VCS - git for hardlinks, plus management of /etc, GRUB/initramfs</li>
   <li>OSTree/Ostbuild - take input set of git repositores, continually feeds multiple trees</li>
   <li>Designed to deploy into /ostree</li>
   <li><b>Does not affect your distribution</b> - just takes up disk space</li>
@@ -100,13 +100,12 @@ drwxr-xr-x. 45 root root 4096 Aug 25 13:26 gnomeos-3.6-i686-devel-b49228c929cfa3
 </article>
 
 <article>
-<h3 id="bisecting-regressions">Bisecting operating system builds</h3>
+<h3 id="Benefits">Benefits</h3>
 <ul>
-  <li>A git commit causes a regression; OSTree tracks set of git
-      repositories and revisions that go into each tree</li>
-  <li>You can bisect across operating system builds; "my sound broke in the last week"</li>
-  <li>I do actually expect users of Free Software to help participate
-      in bisection.</li>
+  <li><b>Fully atomic upgrades</b> - Check out new tree, swap symbolic link</li>
+  <li>Bisect across operating system builds; "my sound broke in the last week"</li>
+  <li>Ensure that everyone is running same set of bits that have been
+      integration tested</li>
 </ul>
 </article>
 
@@ -166,6 +165,7 @@ Already have OSTree entry in grub config
 <ul>
   <li>Patched glibc/nss/nss_files/files-XXX.c to read from both /etc/passwd and /lib/passwd</li>
   <li>/lib/passwd contains <tt>gdm,polkitd</tt></li>
+  <li>/etc/passwd contains <tt>walters</tt></li>
 </ul>
 </article>
 
@@ -224,17 +224,24 @@ Already have OSTree entry in grub config
 </article>
 
 <article>
-<h3 id="future-directions">Future directions</h3>
+<h3 id="ostree-issues">Issues</h3>
+<ul>
+  <li>I'm not actually running the system myself actively, need to make /etc work</li>
+  <li>No built in application story; I'll probably just build Emacs and Epiphany
+      from source myself for now...</li>
+</ul>
+</article>
+
+<article>
+<h3 id="feeding-back-to-production">Feeding back into dpkg/rpm</h3>
 <ul>
   <li>Support using OSTree underneath zypper/yum/rpm and apt-get/dpkg</li>
-  <li>Land wip/etc-writable, land systemd merge, make gnome-ostree more dogfoodable</li>
-  <li>Modify RPM to accept git repositories as source</li>
+  <li>Modify RPM to have a "build serial", allow going backwards</li>
+  <li>Modify RPM to inspect source code and Do The Right Thing (build API, distutils)</li>
   <li>Make spec files more declarative: "Run adduser with this name"</li>
-  <li>Switch <a href="http://git.gnome.org/browse/gnome-ostree/">gnome-ostree</a>
-      to use git submodules</li>
-  <li>Push notifications of git commits, some speedups in build
-      system, should allow average turnaround to be 20 seconds to 2
-      minutes after a commit</li>
+  <li>Add Application tag to RPMs - don't have <tt>%post</tt> scripts,
+      can't conflict/obsolete/.  Basically zeroinstall type
+      integration.</li>
 </ul>
 </article>
 
