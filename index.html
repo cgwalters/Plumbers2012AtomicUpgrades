@@ -55,13 +55,23 @@
 </article>
 
 <article>
+<h3 id="packages-generate-filesystem-tree">You don't actually run Debian/Fedora/Gentoo..</h3>
+
+<ul>
+  <li>You run <i>a filesystem tree</i> resulting from installation and
+      upgrade of a <i>set of packages</i>.</li>
+</ul>
+</article>
+
+<article>
 <h3 id="ostree-for-development">OSTree: "git for operating system binaries"</h3>
 <ul>
   <li>Research project that has borne a lot of fruit</li>
   <li>OSTree/VCS - git for hardlinks, plus management of /etc, GRUB/initramfs</li>
   <li>OSTree/Ostbuild - take input set of git repositores, continually feeds multiple trees</li>
   <li>Designed to deploy into /ostree</li>
-  <li><b>Does not affect your distribution</b> - just takes up disk space</li>
+  <li><b>Does not affect your distribution</b> - just takes up disk
+      space, attempts to minimize most costly attribute - your time</li>
 </ul>
 </article>
 
@@ -212,12 +222,12 @@ Already have OSTree entry in grub config
 <ul>
   <li>BTRFS: Can easily snapshot /; harder to just do /usr, doesn't
       answer /etc, and really wants good userspace management
-      tools.</li>
+      tools (e.g. OpenSUSE Snapper)</li>
   <li>Conary: Like subversion; can rollback, but not atomic, and hacky</li>
   <li>Virtualization: Useful for developers; not realistic for default system</li>
   <li>NixOS: Extremely influential for me.  However, not realistic to
       rebuild everything when libc changes.</li>
-  <li>Other <i>noun</i> Linux and their wrappers for make/tar/wget:
+  <li>Other &lt;noun&gt; Linux and their wrappers for make/tar/wget:
       Pretty much all the same, most difficult problem was probably
       finding an as-yet-unused noun from dictionary.</li>
 </ul>
@@ -229,6 +239,10 @@ Already have OSTree entry in grub config
   <li>I'm not actually running the system myself actively, need to make /etc work</li>
   <li>No built in application story; I'll probably just build Emacs and Epiphany
       from source myself for now...</li>
+  <li>To what degree should we enable third-party application
+      developers, versus the encouragement to be FOSS that the
+      "distribution" model provides?</li>
+  <li></li>
 </ul>
 </article>
 
@@ -239,9 +253,10 @@ Already have OSTree entry in grub config
   <li>Modify RPM to have a "build serial", allow going backwards</li>
   <li>Modify RPM to inspect source code and Do The Right Thing (build API, distutils)</li>
   <li>Make spec files more declarative: "Run adduser with this name"</li>
-  <li>Add Application tag to RPMs - don't have <tt>%post</tt> scripts,
-      can't conflict/obsolete/.  Basically zeroinstall type
-      integration.</li>
+  <li>Add Application tag to RPMs - don't have <tt>%post</tt> scripts
+      or setuid binaries, can't conflict/obsolete, gets installed to
+      globally-unique dir, have exactly one .desktop file, etc.
+      Basically zeroinstall type integration.</li>
 </ul>
 </article>
 
