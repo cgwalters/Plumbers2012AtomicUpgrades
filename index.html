@@ -15,8 +15,7 @@
 </article>
 
 <article>
-<h3 id="why-are-we-here"></h3>
-
+<h3 id="why-are-we-here">Why are we here?</h3>
 <ul>
   <li>Free Software is fun</li>
   <li>A lot of people use our software, for work and play.</li>
@@ -25,7 +24,7 @@
 </article>
 
 <article>
-<h3 id="but-we-have-embarassing-flaws">But we have embarassing flaws</h3>
+<h3 id="other-embarassing-flaws">But we have embarassing flaws</h3>
 
 <ul>
   <li>Upgrades can break your system, not atomic</li>
@@ -35,7 +34,16 @@
 </article>
 
 <article>
-<h3 id="increment-all-the-versions">Increment all the versions!</h3>
+<h3 id="designers-should-not-build-gnome">Designers building GNOME is bad</h3>
+<ul>
+  <li>The original problem I was trying to solve: Designers having to
+      build GNOME from source on their machine in order to see what
+      they're designing.</li>
+</ul>
+</article>
+
+<article>
+<h3 id="increment-all-the-versions">Increment all the versions! (forever)</h3>
 
 <ul>
   <li>RPM and dpkg both define "upgrade" to be increase in version number</li>
@@ -49,9 +57,11 @@
 <article>
 <h3 id="ostree-for-development">OSTree: "git for operating system binaries"</h3>
 <ul>
+  <li>Research project that has borne a lot of fruit</li>
   <li>OSTree/VCS - userspace version control, and GRUB/initramfs management</li>
   <li>OSTree/Ostbuild - take input set of git repositores, continually feeds multiple trees</li>
-  <li>Designed to deploy into /ostree; <b>does not affect your distribution</b></li>
+  <li>Designed to deploy into /ostree</li>
+  <li><b>Does not affect your distribution</b> - just takes up disk space</li>
 </ul>
 </article>
 
@@ -63,6 +73,7 @@
   <li>/home -> /home</li>
   <li>/var -> /ostree/var</li>
   <li>/etc -> /ostree/deploy/trees/X-etc</li>
+  <li>/usr (read-only)</li>
 </ul>
 </article>
 
@@ -119,10 +130,11 @@ M    /usr/libexec/gdm-session-worker
 M    /usr/libexec/gdm-simple-slave
 M    /usr/share/locale/lt/LC_MESSAGES/gnome-panel-3.0.mo
 #
+</pre>
 </article>
 
 <article>
-<h3 id="upgrading-deploying">Upgrading - deploying a new revision<h3>
+<h3 id="upgrading-deploying">Upgrading - deploying a new revision</h3>
 <pre>
 # ls -al /ostree/trees/gnomeos-3.6-i686-devel
  lrwxrwxrwx. 1 root root 87 Aug 29 16:50 /ostree/trees/gnomeos-3.6-i686-devel -> gnomeos-3.6-i686-devel-aa07f4674d47e0e89c034a91433a95d333fe2d2d28adddcb4b2ea5731e97152e
@@ -145,6 +157,15 @@ Already have OSTree entry in grub config
   <li>When deploying new tree:</li>
   <li>Compute diff between current etc and current <b>default</b> etc</tt>
   <li>Apply diff to <b>new</b> etc</tt>
+  <li>New feature: Can choose <i>which</i> etc you want at boot time</tt>
+</ul>
+</article>
+
+<article>
+<h3 id="lib-passwd">/lib/passwd</h3>
+<ul>
+  <li>Patched glibc/nss/nss_files/files-XXX.c to read from both /etc/passwd and /lib/passwd</li>
+  <li>/lib/passwd contains <tt>gdm,polkitd</tt></li>
 </ul>
 </article>
 
@@ -155,7 +176,65 @@ Already have OSTree entry in grub config
   <li><tt>gobject-introspection</tt> can't cross build, therefore <b>must</b> switch over to same-arch build</li>
   <li>"ostbuild" pulls from git repositories, puts results into OSTree roots</li>
   <li>Two roots: gnomeos-3.6-i686-runtime, gnomeos-3.6-i686-devel, but could be as many as desired</li>
-  <li>Entire system builds as non-root; see <a href="http://git.gnome.org/browse/linux-user-chroot/">linux-user-chroot</a></li>
+  <li>Entire system builds as non-root; powered by bitbake/pseudo (OE Core)
+    and <a href="http://git.gnome.org/browse/linux-user-chroot/">linux-user-chroot</a> (ostbuild)</li>
+</ul>
+</article>
+
+<article>
+<h3 id="build-system-2">Continuous integration.  Finally!</h3>
+<ul>
+  <li>After a GDM commit, can have binaries available within 30 seconds.</li>
+  <li>Buildroot filesystem layout measured in seconds - like updates, just hardlinking</li>
+  <li>Except for gtk-update-icon-cache/gconf =(</li>
+</ul>
+</article>
+
+<article>
+<h3 id="build-system-demo">Demo</h3>
+<pre>
+  "components": [
+   		{"src": "gnome:gtk-doc-stub",
+		 "component": "devel",
+		 "noarch": true},
+
+		{"src": "git:git://github.com/atgreen/libffi.git",
+		 "tag": "v3.0.10"},
+
+		{"src": "gnome:glib",
+                 "config-opts": ["--disable-modular-tests"]},
+  ...
+</pre>
+</article>
+
+<article>
+<h3 id="alternatives">Alternatives/Technologies</h3>
+<ul>
+  <li>BTRFS: Can easily snapshot /; harder to just do /usr, doesn't
+      answer /etc, and really wants good userspace management
+      tools.</li>
+  <li>Conary: Like subversion; can rollback, but not atomic, and hacky</li>
+  <li>Virtualization: Useful for developers; not realistic for default system</li>
+  <li>NixOS: Extremely influential for me.  However, not realistic to
+      rebuild everything when libc changes.</li>
+  <li>Other <i>noun</i> Linux and their wrappers for make/tar/wget:
+      Pretty much all the same, most difficult problem was probably
+      finding an as-yet-unused noun from dictionary.</li>
+</ul>
+</article>
+
+<article>
+<h3 id="future-directions">Future directions</h3>
+<ul>
+  <li>Support using OSTree underneath zypper/yum/rpm and apt-get/dpkg</li>
+  <li>Land wip/etc-writable, land systemd merge, make gnome-ostree more dogfoodable</li>
+  <li>Modify RPM to accept git repositories as source</li>
+  <li>Make spec files more declarative: "Run adduser with this name"</li>
+  <li>Switch <a href="http://git.gnome.org/browse/gnome-ostree/">gnome-ostree</a>
+      to use git submodules</li>
+  <li>Push notifications of git commits, some speedups in build
+      system, should allow average turnaround to be 20 seconds to 2
+      minutes after a commit</li>
 </ul>
 </article>
 
